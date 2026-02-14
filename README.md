@@ -44,6 +44,14 @@ simple-agent/
    pip install -r reuirements.txt
    ```
 
+6. Add a `.env` file in the project root to store environment variables:
+   - Create a file named `.env` in the root directory.
+   - Add your Tavily API key:
+     ```env
+     TAVILY_API_KEY=your_tavily_api_key_here
+     ```
+   - Replace `your_tavily_api_key_here` with your actual Tavily API key.
+
 ## Usage
 - Run the agent or web interface using:
   ```bash
