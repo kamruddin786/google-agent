@@ -1,0 +1,9 @@
+google-adk
+litellm
+tavily-python
+python-dotenv
+yfinance
+mftool
+pandas
+numpy
+deprecated
