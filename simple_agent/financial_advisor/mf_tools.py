@@ -8,14 +8,14 @@ mutual fund schemes. Examples:
 """
 
 import os
+from datetime import datetime
 
+import pandas as pd
 from mftool import Mftool
 from tavily import TavilyClient
 from dotenv import load_dotenv
 
 load_dotenv()
-
-mf = Mftool()
 
 _tavily_client = None
 
@@ -44,7 +44,8 @@ def search_mutual_fund(query: str) -> dict:
         Use the scheme code with get_mf_details() to fetch detailed data.
     """
     try:
-        # Get all available schemes and filter by query
+        # Fresh instance each call to avoid stale cached data
+        mf = Mftool()
         all_schemes = mf.get_scheme_codes()
 
         if not all_schemes:
@@ -91,6 +92,9 @@ def get_mf_details(scheme_code: str) -> dict:
         and the last 30 historical NAV entries.
     """
     try:
+        # Fresh instance each call to avoid stale cached data
+        mf = Mftool()
+
         # Get current scheme quote
         quote = mf.get_scheme_quote(scheme_code)
 
@@ -105,22 +109,30 @@ def get_mf_details(scheme_code: str) -> dict:
             "scheme_category": quote.get("scheme_category", "N/A"),
             "nav": quote.get("nav", "N/A"),
             "nav_date": quote.get("date", "N/A"),
+            "data_fetched_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
 
         # Fetch historical NAV data
         try:
             history = mf.get_scheme_historical_nav(scheme_code, as_Dataframe=True)
             if history is not None and not history.empty:
-                # Show last 30 entries
+                # Ensure index is datetime and sort chronologically (oldest first)
+                if not hasattr(history.index, "year"):
+                    history.index = pd.to_datetime(history.index, format="%d-%m-%Y", errors="coerce")
+                history = history.sort_index()
+
+                # Show the most recent 30 entries (newest at end)
                 recent = history.tail(30)
                 nav_history = []
                 for date_val, row in recent.iterrows():
                     nav_history.append({
-                        "date": str(date_val),
+                        "date": date_val.strftime("%Y-%m-%d") if hasattr(date_val, "strftime") else str(date_val),
                         "nav": str(row.get("nav", "N/A")),
                     })
                 result["recent_nav_history"] = nav_history
                 result["total_nav_records"] = len(history)
+                result["history_start_date"] = history.index[0].strftime("%Y-%m-%d") if hasattr(history.index[0], "strftime") else str(history.index[0])
+                result["history_end_date"] = history.index[-1].strftime("%Y-%m-%d") if hasattr(history.index[-1], "strftime") else str(history.index[-1])
             else:
                 result["recent_nav_history"] = "No historical data available."
         except Exception:
@@ -151,6 +163,12 @@ def search_financial_news(query: str) -> dict:
     """
     try:
         tavily = _get_tavily()
+
+        # Auto-append current year if no year is mentioned, to bias toward recent results
+        current_year = str(datetime.now().year)
+        if current_year not in query and str(int(current_year) - 1) not in query:
+            query = f"{query} {current_year}"
+
         response = tavily.search(
             query=query,
             search_depth="advanced",

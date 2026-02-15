@@ -15,6 +15,6 @@ Ollama model examples:
 from google.adk.models.lite_llm import LiteLlm
 
 # ── Change the model name here to switch all agents at once ──
-MODEL_NAME = "ollama_chat/llama3.1:latest"
+MODEL_NAME = "ollama_chat/ministral-3:8b"
 
 MODEL = LiteLlm(model=MODEL_NAME)

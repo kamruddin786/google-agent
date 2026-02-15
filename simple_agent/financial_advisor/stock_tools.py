@@ -7,6 +7,8 @@ Ticker format:
   - Indices: ^NSEI (NIFTY 50), ^BSESN (SENSEX)
 """
 
+from datetime import datetime
+
 import yfinance as yf
 
 
@@ -32,6 +34,7 @@ def get_stock_info(symbol: str) -> dict:
 
         result = {
             "symbol": symbol,
+            "data_fetched_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "name": info.get("shortName") or info.get("longName", "N/A"),
             "sector": info.get("sector", "N/A"),
             "industry": info.get("industry", "N/A"),
@@ -100,6 +103,7 @@ def get_stock_history(symbol: str, period: str = "1y") -> dict:
 
         return {
             "symbol": symbol,
+            "data_fetched_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "period": period,
             "total_data_points": len(hist),
             "showing_last": len(records),
@@ -126,7 +130,10 @@ def get_stock_financials(symbol: str) -> dict:
     try:
         ticker = yf.Ticker(symbol)
 
-        result = {"symbol": symbol}
+        result = {
+            "symbol": symbol,
+            "data_fetched_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
 
         # Income statement (most recent annual)
         income_stmt = ticker.income_stmt
