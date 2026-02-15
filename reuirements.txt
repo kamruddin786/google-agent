@@ -1,4 +1,0 @@
-google-adk
-litellm
-tavily-python 
-python-dotenv
